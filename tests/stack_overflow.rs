@@ -7,7 +7,6 @@ use lazy_static::lazy_static;
 
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
-use rust_os::interrupts::test_init_gdb;
 use rust_os::serial_print;
 use rust_os::serial_println;
 
@@ -19,7 +18,7 @@ pub extern "C" fn _start() -> ! {
     serial_print!("Testing double fault exception...\t");
 
     rust_os::gdt::init();
-    test_init_gdb();
+    TEST_IDT.load();
     // rust_os::init();
 
     stack_overflow();
@@ -38,6 +37,7 @@ fn stack_overflow() {
 fn panic(info: &PanicInfo) -> ! {
     rust_os::test_panic_handler(info);
 }
+
 lazy_static! {
     static ref TEST_IDT: InterruptDescriptorTable = {
         let mut idt = InterruptDescriptorTable::new();
