@@ -5,6 +5,7 @@
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 
+use rust_os::hlt_loop;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 use rust_os::serial_print;
@@ -23,7 +24,7 @@ pub extern "C" fn _start() -> ! {
 
     stack_overflow();
     // panic!("Execution continued after stack overflow");
-    loop {}
+    hlt_loop()
 }
 
 #[allow(unconditional_recursion)]
@@ -56,5 +57,5 @@ extern "x86-interrupt" fn test_double_fault_handler(
 ) -> ! {
     serial_println!("[ok]");
     exit_qemu(QemuExitCode::Success);
-    loop {}
+    hlt_loop()
 }

@@ -6,12 +6,12 @@
 
 use core::panic::PanicInfo;
 
-use rust_os::serial_println;
+use rust_os::{hlt_loop, serial_println};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     test_main();
-    loop {}
+    hlt_loop()
 }
 
 #[cfg(test)]

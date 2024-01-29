@@ -6,11 +6,13 @@
 
 use core::panic::PanicInfo;
 
+use rust_os::hlt_loop;
+
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     rust_os::init();
     test_main();
-    loop {}
+    hlt_loop()
 }
 
 #[cfg(test)]
