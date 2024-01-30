@@ -5,7 +5,8 @@
 
 use core::panic::PanicInfo;
 
-#[warn(unused_imports)]
+use rust_os::hlt_loop;
+#[allow(unused_imports)]
 use rust_os::{println, serial_println, test_panic_handler};
 
 #[no_mangle]
@@ -16,10 +17,7 @@ pub extern "C" fn _start() -> ! {
 
     println!("Did not crash");
     serial_println!("Did not crash");
-    loop {
-        use rust_os::print;
-        print!("-");
-    }
+    hlt_loop()
     // exit_qemu(QemuExitCode::Success);
 }
 
