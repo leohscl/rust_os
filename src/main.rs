@@ -17,6 +17,14 @@ pub extern "C" fn _start() -> ! {
 
     println!("Did not crash");
     serial_println!("Did not crash");
+    let ptr = 0x2052bc as *mut u8;
+    let res = unsafe { *ptr };
+    println!("{}", res);
+    println!("Read worked !");
+    unsafe {
+        *ptr = 42;
+    }
+    println!("Write worked !");
     hlt_loop()
     // exit_qemu(QemuExitCode::Success);
 }
