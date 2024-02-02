@@ -5,27 +5,43 @@
 
 use core::panic::PanicInfo;
 
-use rust_os::hlt_loop;
 #[allow(unused_imports)]
 use rust_os::{println, serial_println, test_panic_handler};
 
+use bootloader::{entry_point, BootInfo};
+use x86_64::VirtAddr;
+
+entry_point!(kernel_main);
+
 #[no_mangle]
-pub extern "C" fn _start() -> ! {
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     println!("Hello World !");
 
     rust_os::init();
-
     println!("Did not crash");
-    serial_println!("Did not crash");
-    let ptr = 0x2052bc as *mut u8;
-    let res = unsafe { *ptr };
-    println!("{}", res);
-    println!("Read worked !");
-    unsafe {
-        *ptr = 42;
+
+    let physical_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+
+    let addresses_test = [
+        0xb8000,
+        0x201008,
+        0x0100_0020_1a10,
+        boot_info.physical_memory_offset,
+    ];
+    for adress in addresses_test {
+        let virt = VirtAddr::new(adress);
+        let phys = unsafe { rust_os::memory::translate_addr(virt, physical_mem_offset) };
+        println!("{:?} -> {:?}", virt, phys);
     }
-    println!("Write worked !");
-    hlt_loop()
+    // let level_4_table = unsafe { rust_os::memory::active_level_4_table(physical_mem_offset) };
+
+    // for (i, entry) in level_4_table.iter().enumerate() {
+    //     if !entry.is_unused() {
+    //         println!("L4 entry: {}, {:?}", i, entry);
+    //     }
+    // }
+
+    rust_os::hlt_loop()
     // exit_qemu(QemuExitCode::Success);
 }
 
