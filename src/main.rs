@@ -4,7 +4,9 @@
 #![test_runner(rust_os::test_runner)]
 
 use core::panic::PanicInfo;
+use x86_64::structures::paging::{Page, Translate};
 
+use rust_os::memory;
 #[allow(unused_imports)]
 use rust_os::{println, serial_println, test_panic_handler};
 
@@ -15,12 +17,11 @@ entry_point!(kernel_main);
 
 #[no_mangle]
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    println!("Hello World !");
-
-    rust_os::init();
-    println!("Did not crash");
-
     let physical_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut offset_page_table = unsafe { memory::init(physical_mem_offset) };
+
+    println!("Hello World !");
+    rust_os::init();
 
     let addresses_test = [
         0xb8000,
@@ -30,9 +31,24 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     ];
     for adress in addresses_test {
         let virt = VirtAddr::new(adress);
-        let phys = unsafe { rust_os::memory::translate_addr(virt, physical_mem_offset) };
+        let phys = offset_page_table.translate_addr(virt);
         println!("{:?} -> {:?}", virt, phys);
     }
+    // let virtual_page = Page::from_start_address(VirtAddr::new(0)).unwrap();
+    let virtual_page = Page::from_start_address(VirtAddr::new(0xdeadbeaf000)).unwrap();
+    // let mut dummy_allocator = memory::EmptyFrameAllocator;
+    let mut boot_info_allocator =
+        unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
+
+    rust_os::memory::create_example_mapping(
+        virtual_page,
+        &mut offset_page_table,
+        &mut boot_info_allocator,
+    );
+
+    let page_ptr: *mut u64 = virtual_page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+
     // let level_4_table = unsafe { rust_os::memory::active_level_4_table(physical_mem_offset) };
 
     // for (i, entry) in level_4_table.iter().enumerate() {
