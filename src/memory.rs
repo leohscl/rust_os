@@ -12,7 +12,6 @@ unsafe impl FrameAllocator<Size4KiB> for EmptyFrameAllocator {
         None
     }
 }
-
 pub struct BootInfoFrameAllocator {
     memory_map: &'static MemoryMap,
     next: usize,

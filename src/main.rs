@@ -3,10 +3,12 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(rust_os::test_runner)]
 
+extern crate alloc;
+use alloc::boxed::Box;
 use core::panic::PanicInfo;
 use x86_64::structures::paging::{Page, Translate};
 
-use rust_os::memory;
+use rust_os::{allocator, memory};
 #[allow(unused_imports)]
 use rust_os::{println, serial_println, test_panic_handler};
 
@@ -35,27 +37,23 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         println!("{:?} -> {:?}", virt, phys);
     }
     // let virtual_page = Page::from_start_address(VirtAddr::new(0)).unwrap();
-    let virtual_page = Page::from_start_address(VirtAddr::new(0xdeadbeaf000)).unwrap();
+    // let virtual_page = Page::from_start_address(VirtAddr::new(0xdeadbeaf000)).unwrap();
+    // rust_os::memory::create_example_mapping(
+    //     virtual_page,
+    //     &mut offset_page_table,
+    //     &mut boot_info_allocator,
+    // );
     // let mut dummy_allocator = memory::EmptyFrameAllocator;
+    // let page_ptr: *mut u64 = virtual_page.start_address().as_mut_ptr();
+    // unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
     let mut boot_info_allocator =
         unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
-    rust_os::memory::create_example_mapping(
-        virtual_page,
-        &mut offset_page_table,
-        &mut boot_info_allocator,
-    );
+    allocator::init_heap(&mut offset_page_table, &mut boot_info_allocator)
+        .expect("heap init failed");
 
-    let page_ptr: *mut u64 = virtual_page.start_address().as_mut_ptr();
-    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
-
-    // let level_4_table = unsafe { rust_os::memory::active_level_4_table(physical_mem_offset) };
-
-    // for (i, entry) in level_4_table.iter().enumerate() {
-    //     if !entry.is_unused() {
-    //         println!("L4 entry: {}, {:?}", i, entry);
-    //     }
-    // }
+    let x = Box::new(42);
+    println!("x does not crash ! x = {}", x);
 
     rust_os::hlt_loop()
     // exit_qemu(QemuExitCode::Success);
