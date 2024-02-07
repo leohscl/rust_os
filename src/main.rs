@@ -4,7 +4,7 @@
 #![test_runner(rust_os::test_runner)]
 
 extern crate alloc;
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 use core::panic::PanicInfo;
 use x86_64::structures::paging::{Page, Translate};
 
@@ -52,8 +52,13 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     allocator::init_heap(&mut offset_page_table, &mut boot_info_allocator)
         .expect("heap init failed");
 
-    let x = Box::new(42);
+    let x = Box::new(41);
     println!("x does not crash ! x = {}", x);
+    let mut vec = Vec::new();
+    for v in 0..500 {
+        vec.push(v);
+    }
+    println!("vec at {:p}", vec.as_slice());
 
     rust_os::hlt_loop()
     // exit_qemu(QemuExitCode::Success);
