@@ -2,6 +2,9 @@ use core::alloc::GlobalAlloc;
 
 use core::ptr::null_mut;
 
+pub mod bump;
+pub mod linked_list;
+
 use bootloader::bootinfo::MemoryMap;
 use x86_64::{
     structures::paging::{
@@ -13,10 +16,13 @@ use x86_64::{
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024;
 
-use linked_list_allocator::LockedHeap;
+// use linked_list_allocator::LockedHeap;
+
+use bump::BumpAllocator;
+use bump::Locked;
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
 struct DummyAllocator;
 
@@ -54,4 +60,8 @@ pub fn init_heap(
     unsafe { ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE) };
 
     Ok(())
+}
+
+pub fn align_up(current_adress: usize, align: usize) -> usize {
+    (current_adress + align - 1) & !(align - 1)
 }
