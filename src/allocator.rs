@@ -5,7 +5,6 @@ use core::ptr::null_mut;
 pub mod bump;
 pub mod linked_list;
 
-use bootloader::bootinfo::MemoryMap;
 use x86_64::{
     structures::paging::{
         mapper::MapToError, FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB,
@@ -18,11 +17,26 @@ pub const HEAP_SIZE: usize = 100 * 1024;
 
 // use linked_list_allocator::LockedHeap;
 
-use bump::BumpAllocator;
-use bump::Locked;
+use self::linked_list::LinkedListAllocator;
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Self {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
+}
 
 #[global_allocator]
-static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
+// static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
 struct DummyAllocator;
 

@@ -24,23 +24,9 @@ impl BumpAllocator {
     }
 }
 
-pub struct Locked<A> {
-    inner: spin::Mutex<A>,
-}
-
-impl<A> Locked<A> {
-    pub const fn new(inner: A) -> Self {
-        Self {
-            inner: spin::Mutex::new(inner),
-        }
-    }
-
-    pub fn lock(&self) -> spin::MutexGuard<A> {
-        self.inner.lock()
-    }
-}
-
 use super::align_up;
+use super::Locked;
+
 unsafe impl GlobalAlloc for Locked<BumpAllocator> {
     unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
         let mut bump = self.lock();

@@ -6,7 +6,7 @@
 extern crate alloc;
 use alloc::{boxed::Box, vec::Vec};
 use core::panic::PanicInfo;
-use x86_64::structures::paging::{Page, Translate};
+use x86_64::structures::paging::Translate;
 
 use rust_os::{allocator, memory};
 #[allow(unused_imports)]
