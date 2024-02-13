@@ -10,7 +10,7 @@ use x86_64::structures::paging::Translate;
 
 use rust_os::{
     allocator, memory,
-    task::{keyboard, simple_executor::SimpleExecutor},
+    task::{executor::Executor, keyboard, simple_executor::SimpleExecutor},
 };
 #[allow(unused_imports)]
 use rust_os::{println, serial_println, test_panic_handler};
@@ -55,13 +55,8 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     allocator::init_heap(&mut offset_page_table, &mut boot_info_allocator)
         .expect("heap init failed");
 
-    let mut executor = SimpleExecutor::new();
-    use rust_os::task::Task;
-    for _ in 0..5 {
-        executor.spawn(Task::new(example_task()));
-    }
-    executor.spawn(Task::new(keyboard::print_keypresses()));
-    executor.run();
+    // let mut executor = SimpleExecutor::new();
+    let mut executor = Executor::new();
 
     let x = Box::new(41);
     println!("x does not crash ! x = {}", x);
@@ -70,9 +65,12 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         vec.push(v);
     }
     println!("vec at {:p}", vec.as_slice());
-
-    rust_os::hlt_loop()
-    // exit_qemu(QemuExitCode::Success);
+    use rust_os::task::Task;
+    for _ in 0..5 {
+        executor.spawn(Task::new(example_task()));
+    }
+    executor.spawn(Task::new(keyboard::print_keypresses()));
+    executor.run();
 }
 
 async fn async_number() -> u32 {
